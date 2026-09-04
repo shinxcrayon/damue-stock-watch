@@ -1,0 +1,23 @@
+name: Test LINE Notify
+
+# 手動実行のみ。曜日・時間に関係なく、押した瞬間にテストメッセージを送る。
+on:
+  workflow_dispatch:
+
+jobs:
+  test-notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Send test LINE message
+        env:
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+          PYTHONUNBUFFERED: "1"
+        run: python test_notify.py
