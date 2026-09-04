@@ -65,7 +65,7 @@ def save_state(available: bool) -> None:
 def send_line_broadcast(text: str) -> None:
     """LINE公式アカウントの友だち全員（＝自分だけのはず）にブロードキャスト送信"""
     if not LINE_CHANNEL_ACCESS_TOKEN:
-        print("LINE_CHANNEL_ACCESS_TOKEN が設定されていないため通知をスキップします")
+        print("LINE_CHANNEL_ACCESS_TOKEN が設定されていないため通知をスキップします", flush=True)
         return
 
     url = "https://api.line.me/v2/bot/message/broadcast"
@@ -79,14 +79,14 @@ def send_line_broadcast(text: str) -> None:
 
     req = urllib.request.Request(url, data=body, headers=headers, method="POST")
     with urllib.request.urlopen(req, timeout=15) as res:
-        print(f"LINE API response status: {res.status}")
+        print(f"LINE API response status: {res.status}", flush=True)
 
 
 def run_watch_loop() -> None:
     now = datetime.now(JST)
 
     if now.weekday() != WATCH_WEEKDAY:
-        print(f"本日({now.strftime('%Y-%m-%d')})は監視対象の曜日（金曜）ではないため終了します")
+        print(f"本日({now.strftime('%Y-%m-%d')})は監視対象の曜日（金曜）ではないため終了します", flush=True)
         return
 
     window_start_dt = datetime.combine(now.date(), WATCH_START, tzinfo=JST)
@@ -94,29 +94,30 @@ def run_watch_loop() -> None:
 
     if now < window_start_dt:
         wait_seconds = (window_start_dt - now).total_seconds()
-        print(f"監視開始（{WATCH_START.strftime('%H:%M')}）まで待機します（約{int(wait_seconds)}秒）")
+        print(f"監視開始（{WATCH_START.strftime('%H:%M')}）まで待機します（約{int(wait_seconds)}秒）", flush=True)
         time_module.sleep(max(0, wait_seconds))
 
     if datetime.now(JST) > window_end_dt:
-        print("監視時間（19:00）を過ぎてしまったため終了します")
+        print("監視時間（19:00）を過ぎてしまったため終了します", flush=True)
         return
 
     previous = load_previous_state()
     print(
         f"監視を開始します（{WATCH_START.strftime('%H:%M')}〜{WATCH_END.strftime('%H:%M')} JST, "
-        f"{CHECK_INTERVAL_SECONDS}秒間隔）"
+        f"{CHECK_INTERVAL_SECONDS}秒間隔）",
+        flush=True,
     )
 
     while datetime.now(JST) <= window_end_dt:
         try:
             available = fetch_availability()
         except Exception as e:
-            print(f"在庫チェックに失敗しました（次のチェックでリトライします）: {e}")
+            print(f"在庫チェックに失敗しました（次のチェックでリトライします）: {e}", flush=True)
             time_module.sleep(CHECK_INTERVAL_SECONDS)
             continue
 
         now_str = datetime.now(JST).strftime("%H:%M:%S")
-        print(f"[{now_str}] available={available} (previous={previous})")
+        print(f"[{now_str}] available={available} (previous={previous})", flush=True)
 
         if available and not previous:
             message = (
@@ -126,13 +127,13 @@ def run_watch_loop() -> None:
                 "急いでチェックしてください！"
             )
             send_line_broadcast(message)
-            print("通知を送信しました")
+            print("通知を送信しました", flush=True)
 
         previous = available
         save_state(available)
         time_module.sleep(CHECK_INTERVAL_SECONDS)
 
-    print("監視時間が終了しました")
+    print("監視時間が終了しました", flush=True)
 
 
 def main() -> None:
