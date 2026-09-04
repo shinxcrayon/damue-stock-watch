@@ -1,0 +1,40 @@
+name: Check DAMUE Stock
+
+on:
+  schedule:
+    # 17:20(JST) = 08:20(UTC) に一度だけジョブを起動する。
+    # 実際の監視ループ（17:30〜19:00, 1分間隔）はcheck_stock.py内部で行う。
+    # スケジューラの遅延に備えて開始10分前から起動している。
+    - cron: "20 8 * * 5"
+  # 手動実行やテスト用
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check-stock:
+    runs-on: ubuntu-latest
+    # 17:20開始〜19:00終了（約100分）+ 遅延バッファを見込んだタイムアウト
+    timeout-minutes: 120
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check stock every minute during the watch window
+        env:
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+        run: python check_stock.py
+
+      - name: Commit updated stock state
+        run: |
+          git config user.name "stock-watch-bot"
+          git config user.email "stock-watch-bot@users.noreply.github.com"
+          git add stock_state.json
+          git diff --staged --quiet || git commit -m "chore: update stock state"
+          git push
