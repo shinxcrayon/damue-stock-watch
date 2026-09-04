@@ -29,6 +29,8 @@ jobs:
       - name: Check stock every minute during the watch window
         env:
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+          # Pythonの出力バッファリングを無効化し、ログをリアルタイムで表示させる
+          PYTHONUNBUFFERED: "1"
         run: python check_stock.py
 
       - name: Commit updated stock state
