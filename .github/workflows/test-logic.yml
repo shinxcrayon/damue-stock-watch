@@ -1,0 +1,22 @@
+name: Test Stock Logic
+
+# 手動実行のみ。実サイトにはアクセスせず、判定ロジックだけを検証する。
+on:
+  workflow_dispatch:
+
+jobs:
+  test-logic:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run logic test
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: python test_logic.py
